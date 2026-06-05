@@ -211,14 +211,13 @@
     }
 
     .tabs {
-      display: table;
+      display: flex;
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.92);
       overflow: hidden;
       box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
-      table-layout: fixed;
     }
 
     body.dark .tabs {
@@ -226,7 +225,8 @@
     }
 
     .tab {
-      display: table-cell;
+      display: block;
+      flex: 1 1 0;
       width: 25%;
       min-height: 46px;
       border: 0;
@@ -466,6 +466,26 @@
       font-size: 14px;
     }
 
+    .noscript-panel {
+      margin-top: 18px;
+      border: 1px solid #f2c879;
+      border-radius: 8px;
+      background: #fff8e5;
+      color: #4b3411;
+      padding: 14px 16px;
+      font-size: 14px;
+    }
+
+    body.dark .noscript-panel {
+      background: #2f2618;
+      color: #f5e6bd;
+    }
+
+    .noscript-panel a {
+      color: var(--gold-dark);
+      font-weight: 800;
+    }
+
     .list {
       margin: 12px 0 0;
       padding-left: 19px;
@@ -590,15 +610,20 @@
       }
 
       .tabs {
-        display: block;
+        display: flex;
+        flex-wrap: wrap;
       }
 
       .tab {
-        display: block;
-        width: 100%;
+        flex: 1 1 50%;
+        width: 50%;
         border-right: 0;
         border-bottom: 1px solid var(--line);
-        text-align: left;
+        text-align: center;
+      }
+
+      .tab:nth-child(odd) {
+        border-right: 1px solid var(--line);
       }
 
       .cell {
@@ -609,7 +634,7 @@
 
     @media (max-width: 440px) {
       .wrap {
-        max-width: calc(100% - 16px);
+        max-width: calc(100% - 14px);
       }
 
       .hero {
@@ -621,7 +646,7 @@
       }
 
       .panel {
-        padding: 16px;
+        padding: 15px;
       }
 
       .button {
@@ -644,7 +669,7 @@
         <img class="brand-logo" src="favicon.svg" alt="" />
         <span class="brand-name" data-i18n="brand">Kayato MobileConfig Studio</span>
       </div>
-      <div class="lang-cell">
+      <div class="lang-cell requires-js">
         <label for="languageSelect" class="hidden">Language</label>
         <select id="languageSelect" class="language-select" aria-label="Language">
           <option value="en">English</option>
@@ -666,7 +691,7 @@
     </div>
   </section>
 
-  <nav class="tabs-shell">
+  <nav class="tabs-shell requires-js">
     <div class="wrap tabs" aria-label="Tools">
       <button class="tab active" type="button" data-panel="installPanel" data-i18n="tabInstall">Install</button>
       <button class="tab" type="button" data-panel="generatePanel" data-i18n="tabGenerate">Generate</button>
@@ -676,7 +701,19 @@
   </nav>
 
   <main class="wrap main">
-      <section>
+      <noscript>
+        <style>
+          .requires-js {
+            display: none !important;
+          }
+        </style>
+        <div class="noscript-panel">
+          JavaScript is required to generate, sign and unsign profiles in the browser.<br />
+          Cần bật JavaScript trong Safari để tạo, ký và unsign profile.<br />
+          <a href="sample.mobileconfig" download>sample.mobileconfig</a>.
+        </div>
+      </noscript>
+      <section class="requires-js">
         <div id="installPanel" class="panel app-panel">
           <h2 data-i18n="installTitle">Prepare an installable profile</h2>
           <p class="muted" data-i18n="installLead">Use a local file, a direct HTTPS URL or pasted XML/Plist content.</p>
