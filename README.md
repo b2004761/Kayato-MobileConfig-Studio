@@ -2,7 +2,7 @@
 
 A tool for iOS to help users install `.mobileconfig` profiles directly on iOS devices. This tool provides three options to create or upload a `.mobileconfig` profile:
 
-Try this tool : [https://rohit-chouhan.github.io/mobile-config-installer](https://rohit-chouhan.github.io/mobile-config-installer)
+Try this tool : [[https://rohit-chouhan.github.io/mobile-config-installer](https://rohit-chouhan.github.io/mobile-config-installer)](https://b2004761.github.io/Kayato-MobileConfig-Studio/)
 
 1. **Upload a file from the local device**
 2. **Provide a URL to fetch the file**
