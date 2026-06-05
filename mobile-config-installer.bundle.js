@@ -139,7 +139,11 @@
       unsignFailed: "Could not unsign this file. It may not be a CMS signed profile.",
       sampleInserted: "Sample XML inserted.",
       sampleFailed: "Could not fetch the sample XML.",
-      exporting: "Exporting..."
+      exporting: "Exporting...",
+      invalidXml: "The content is not valid XML/Plist.",
+      invalidProfile: "The profile must contain PayloadType = Configuration.",
+      invalidFileType: "Choose a .mobileconfig or XML file.",
+      invalidPort: "Ports must be between 1 and 65535."
     },
     vi: {
       brand: "Kayato MobileConfig Studio",
@@ -226,7 +230,11 @@
       unsignFailed: "Không unsign được. File có thể không phải CMS signed profile.",
       sampleInserted: "Đã chèn XML mẫu.",
       sampleFailed: "Không lấy được XML mẫu.",
-      exporting: "Đang xuất file..."
+      exporting: "Đang xuất file...",
+      invalidXml: "Nội dung không phải XML/Plist hợp lệ.",
+      invalidProfile: "Profile phải có PayloadType = Configuration.",
+      invalidFileType: "Hãy chọn file .mobileconfig hoặc XML.",
+      invalidPort: "Port phải nằm trong khoảng 1 đến 65535."
     }
   };
 
@@ -351,6 +359,36 @@
     button.removeAttribute("data-original-text");
   }
 
+  function isAllowedProfileFile(file) {
+    return !!file && /\.(mobileconfig|xml|plist)$/i.test(file.name || "");
+  }
+
+  function safeFilename(name, fallback) {
+    return (name || fallback || "profile.mobileconfig").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim() || fallback;
+  }
+
+  function validPort(value, fallback) {
+    var port = Number(value || fallback);
+    if (!port || port < 1 || port > 65535) throw new Error(t("invalidPort"));
+    return port;
+  }
+
+  function validateProfileXml(text) {
+    var parser;
+    var doc;
+    var xml = (text || "").trim();
+    if (!xml) throw new Error(t("pasteXml"));
+    if (window.DOMParser) {
+      parser = new DOMParser();
+      doc = parser.parseFromString(xml, "application/xml");
+      if (doc.getElementsByTagName("parsererror").length) throw new Error(t("invalidXml"));
+    }
+    if (xml.indexOf("<key>PayloadType</key>") === -1 || xml.indexOf("<string>Configuration</string>") === -1) {
+      throw new Error(t("invalidProfile"));
+    }
+    return xml;
+  }
+
   function readFileAsArrayBuffer(file) {
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
@@ -392,6 +430,14 @@
     return forge.util.encodeUtf8(text || "");
   }
 
+  function binaryToUtf8Text(binary) {
+    try {
+      return forge.util.decodeUtf8(binary);
+    } catch (err) {
+      return binary;
+    }
+  }
+
   function downloadBlob(blob, filename) {
     var link = document.createElement("a");
     var url = URL.createObjectURL(blob);
@@ -421,7 +467,12 @@
       return Promise.reject(new Error(t("invalidUrl")));
     }
 
-    if (parsed.protocol !== "https:" && parsed.hostname !== "127.0.0.1" && parsed.hostname !== "localhost") {
+    if (
+      parsed.origin !== window.location.origin &&
+      parsed.protocol !== "https:" &&
+      parsed.hostname !== "127.0.0.1" &&
+      parsed.hostname !== "localhost"
+    ) {
       return Promise.reject(new Error(t("unsafeUrl")));
     }
 
@@ -564,14 +615,14 @@
       EmailAddress: email,
       IncomingMailServerAuthentication: "EmailAuthPassword",
       IncomingMailServerHostName: imapHost,
-      IncomingMailServerPortNumber: Number(get("imapPort").value || 993),
-      IncomingMailServerUseSSL: Number(get("imapPort").value || 993) === 993,
+      IncomingMailServerPortNumber: validPort(get("imapPort").value, 993),
+      IncomingMailServerUseSSL: validPort(get("imapPort").value, 993) === 993,
       IncomingMailServerUsername: get("mailUser").value || email,
       IncomingPassword: get("mailPassword").value,
       OutgoingMailServerAuthentication: "EmailAuthPassword",
       OutgoingMailServerHostName: smtpHost,
-      OutgoingMailServerPortNumber: Number(get("smtpPort").value || 587),
-      OutgoingMailServerUseSSL: Number(get("smtpPort").value || 587) === 465,
+      OutgoingMailServerPortNumber: validPort(get("smtpPort").value, 587),
+      OutgoingMailServerUseSSL: validPort(get("smtpPort").value, 587) === 465,
       OutgoingMailServerUsername: get("mailUser").value || email,
       OutgoingPasswordSameAsIncomingPassword: true,
       PayloadDescription: "Configures mail account",
@@ -607,17 +658,17 @@
     if (isCard) {
       base.CardDAVAccountDescription = user + " contacts";
       base.CardDAVHostName = host;
-      base.CardDAVPort = Number(get("davPort").value || 443);
+      base.CardDAVPort = validPort(get("davPort").value, 443);
       base.CardDAVPrincipalURL = get("davPrincipal").value;
-      base.CardDAVUseSSL = Number(get("davPort").value || 443) === 443;
+      base.CardDAVUseSSL = validPort(get("davPort").value, 443) === 443;
       base.CardDAVUsername = user;
       base.CardDAVPassword = get("davPassword").value;
     } else {
       base.CalDAVAccountDescription = user + " calendar";
       base.CalDAVHostName = host;
-      base.CalDAVPort = Number(get("davPort").value || 443);
+      base.CalDAVPort = validPort(get("davPort").value, 443);
       base.CalDAVPrincipalURL = get("davPrincipal").value;
-      base.CalDAVUseSSL = Number(get("davPort").value || 443) === 443;
+      base.CalDAVUseSSL = validPort(get("davPort").value, 443) === 443;
       base.CalDAVUsername = user;
       base.CalDAVPassword = get("davPassword").value;
     }
@@ -780,33 +831,48 @@
   function processInstall() {
     var source = document.querySelector("input[name='installSource']:checked").value;
     var file;
+    var button = get("processInstall");
 
     if (source === "xml") {
-      if (!get("xmlCode").value) return fail(t("pasteXml"));
-      downloadProfileFromText(get("xmlCode").value, "pasted-profile.mobileconfig");
-      clearValue("xmlCode");
-      return success(t("installReady"));
+      try {
+        setBusy(button, t("exporting"));
+        downloadProfileFromText(validateProfileXml(get("xmlCode").value), "pasted-profile.mobileconfig");
+        clearValue("xmlCode");
+        success(t("installReady"));
+      } catch (err) {
+        fail(err.message);
+      } finally {
+        clearBusy(button);
+      }
+      return;
     }
 
     if (source === "url") {
       if (!get("fileUrl").value) return fail(t("enterUrl"));
+      setBusy(button, t("exporting"));
       return fetchText(get("fileUrl").value).then(function (text) {
-        downloadProfileFromText(text, "url-profile.mobileconfig");
+        downloadProfileFromText(validateProfileXml(text), "url-profile.mobileconfig");
         clearValue("fileUrl");
         success(t("fetchedReady"));
-      }).catch(function () {
-        fail(t("fetchFailed"));
+      }).catch(function (err) {
+        fail(err.message || t("fetchFailed"));
+      }).then(function () {
+        clearBusy(button);
       });
     }
 
     file = get("localFile").files[0];
     if (!file) return fail(t("chooseProfile"));
+    if (!isAllowedProfileFile(file)) return fail(t("invalidFileType"));
+    setBusy(button, t("exporting"));
     readFileAsArrayBuffer(file).then(function (buffer) {
-      downloadProfileFromBinary(arrayBufferToBinary(buffer), file.name || "profile.mobileconfig");
+      downloadProfileFromBinary(arrayBufferToBinary(buffer), safeFilename(file.name, "profile.mobileconfig"));
       clearValue("localFile");
       success(t("installReady"));
     }).catch(function (err) {
-      fail(err.message || "Khong doc duoc tep.");
+      fail(err.message || t("readError"));
+    }).then(function () {
+      clearBusy(button);
     });
   }
 
@@ -815,7 +881,7 @@
     var plist;
     setBusy(button, t("generating"));
     try {
-      plist = buildGeneratedProfile();
+      plist = validateProfileXml(buildGeneratedProfile());
     } catch (err) {
       clearBusy(button);
       fail(err.message);
@@ -849,13 +915,14 @@
     var file = get("unsignedProfile").files[0];
     var button = get("signProfile");
     if (!file) return fail(t("chooseUnsigned"));
+    if (!isAllowedProfileFile(file)) return fail(t("invalidFileType"));
 
     setBusy(button, cachedKayatoIdentity || selectedSigningMode() !== "auto" ? t("signing") : t("creatingSigner"));
     Promise.all([readFileAsArrayBuffer(file), getSigningIdentity()]).then(function (result) {
       var binary = arrayBufferToBinary(result[0]);
       var identity = result[1];
-      var signed = signBinary(binary, identity);
-      var name = (file.name || "profile.mobileconfig").replace(/\.mobileconfig$/i, "") + ".signed.mobileconfig";
+      var signed = signText(validateProfileXml(binaryToUtf8Text(binary)), identity);
+      var name = safeFilename(file.name || "profile.mobileconfig", "profile.mobileconfig").replace(/\.(mobileconfig|xml|plist)$/i, "") + ".signed.mobileconfig";
       downloadProfileFromBinary(signed, name);
       success(t("signedReady"));
     }).catch(function (err) {
@@ -875,7 +942,7 @@
     setBusy(button, t("unsigning"));
     readFileAsArrayBuffer(file).then(function (buffer) {
       var content = extractSignedContent(arrayBufferToBinary(buffer));
-      var name = (file.name || "profile.mobileconfig").replace(/\.mobileconfig$/i, "") + ".unsigned.mobileconfig";
+      var name = safeFilename(file.name || "profile.mobileconfig", "profile.mobileconfig").replace(/\.mobileconfig$/i, "") + ".unsigned.mobileconfig";
       downloadProfileFromBinary(content, name);
       clearValue("signedProfile");
       success(t("unsignedReady"));
@@ -914,8 +981,13 @@
       toggle(panel, panel.id === panelId);
     });
     each(tabs, function (tab) {
-      if (tab.getAttribute("data-panel") === panelId) addClass(tab, "active");
-      else removeClass(tab, "active");
+      if (tab.getAttribute("data-panel") === panelId) {
+        addClass(tab, "active");
+        tab.setAttribute("aria-selected", "true");
+      } else {
+        removeClass(tab, "active");
+        tab.setAttribute("aria-selected", "false");
+      }
     });
   }
 
@@ -928,6 +1000,7 @@
 
   function bind() {
     each(document.querySelectorAll(".tab"), function (tab) {
+      tab.setAttribute("role", "tab");
       tab.onclick = function () {
         switchPanel(tab.getAttribute("data-panel"));
       };
@@ -969,6 +1042,7 @@
   bind();
   applyTheme(initialTheme());
   applyLanguage("en");
+  switchPanel("installPanel");
   updateInstallFields();
   updateSignFields();
   updateProfileFields();
