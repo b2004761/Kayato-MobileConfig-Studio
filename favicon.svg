@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="T dragon logo">
+  <defs>
+    <linearGradient id="bg" x1="86" y1="40" x2="430" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="1" stop-color="#3b424c"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="92" y1="114" x2="400" y2="398" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7d6"/>
+      <stop offset=".42" stop-color="#c79a3c"/>
+      <stop offset="1" stop-color="#f3e7bd"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M114 316c74 72 218 70 282-4 34-40 18-96-36-108-44-10-82 14-116 54-29 34-64 45-96 24 34 7 63-8 88-36 44-51 94-79 150-56 73 30 83 111 30 170-82 91-248 84-332-2z" fill="none" stroke="#c79a3c" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+  <path d="M362 198l44-12-24 40 35 19-47 8" fill="none" stroke="#fff1bd" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="356" cy="206" r="7" fill="#fff8dc"/>
+  <path fill="url(#metal)" d="M92 112h328v74H295v214h-78V186H92z"/>
+  <path fill="#f8fafc" opacity=".62" d="M122 136h268v24H270v214h-28V160H122z"/>
+</svg>

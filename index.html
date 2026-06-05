@@ -1,0 +1,911 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="title" content="Kayato MobileConfig Studio" />
+  <meta name="description" content="Create, sign, unsign and prepare iOS .mobileconfig profiles locally in your browser." />
+  <meta name="author" content="Rohit Chouhan" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https: http://127.0.0.1:* http://localhost:*; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Kayato MobileConfig Studio</title>
+  <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --ink: #1f2933;
+      --muted: #68717d;
+      --line: #ddd6c8;
+      --panel: #ffffff;
+      --panel-soft: #fbfaf7;
+      --gold: #b88a2f;
+      --gold-dark: #8c681f;
+      --gold-soft: #f3ead2;
+      --silver: #c8ced6;
+      --charcoal: #111827;
+      --red: #b91c1c;
+      --shadow: 0 18px 40px rgba(31, 41, 51, 0.09);
+    }
+
+    body.dark {
+      --bg: #111827;
+      --ink: #f5f1e8;
+      --muted: #c7bdab;
+      --line: #3a3328;
+      --panel: #1b2430;
+      --panel-soft: #202a36;
+      --gold: #d1a84d;
+      --gold-dark: #f0d18a;
+      --gold-soft: #342a18;
+      --silver: #6f7782;
+      --charcoal: #f8fafc;
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 16% -80px, rgba(184, 138, 47, 0.18), transparent 360px),
+        radial-gradient(circle at 88% 40px, rgba(200, 206, 214, 0.32), transparent 310px),
+        linear-gradient(180deg, #fffdf8 0, var(--bg) 390px);
+      color: var(--ink);
+      font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    body.dark {
+      background:
+        radial-gradient(circle at 16% -80px, rgba(209, 168, 77, 0.16), transparent 360px),
+        radial-gradient(circle at 88% 40px, rgba(111, 119, 130, 0.18), transparent 310px),
+        linear-gradient(180deg, #18212d 0, var(--bg) 390px);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .wrap {
+      width: 980px;
+      max-width: calc(100% - 32px);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(140, 104, 31, 0.16);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .topbar-inner,
+    .hero-grid {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .brand-cell,
+    .lang-cell,
+    .hero-copy {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .brand-cell {
+      width: 56%;
+    }
+
+    .brand-logo {
+      display: inline-block;
+      width: 34px;
+      height: 34px;
+      margin-right: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(17, 24, 39, 0.14);
+      vertical-align: middle;
+    }
+
+    .brand-name {
+      display: inline-block;
+      font-weight: 800;
+      vertical-align: middle;
+      color: var(--charcoal);
+    }
+
+    .lang-cell {
+      width: 44%;
+      text-align: right;
+    }
+
+    .language-select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 10px;
+      color: var(--ink);
+      font-weight: 700;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+    }
+
+    .theme-button {
+      width: 38px;
+      min-height: 38px;
+      margin-left: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 36px;
+      text-align: center;
+    }
+
+    body.dark .topbar,
+    body.dark .tabs-shell {
+      background: rgba(17, 24, 39, 0.92);
+    }
+
+    body.dark .language-select {
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .hero {
+      padding: 30px 0 20px;
+    }
+
+    .hero-copy {
+      width: 100%;
+      padding-right: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 800px;
+      font-size: 40px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 680px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15.5px;
+    }
+
+    .tabs-shell {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(140, 104, 31, 0.14);
+      background: rgba(246, 244, 239, 0.94);
+    }
+
+    .tabs {
+      display: table;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+      table-layout: fixed;
+    }
+
+    body.dark .tabs {
+      background: rgba(27, 36, 48, 0.96);
+    }
+
+    .tab {
+      display: table-cell;
+      width: 25%;
+      min-height: 46px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      color: #3d4652;
+      padding: 12px 10px;
+      cursor: pointer;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    body.dark .tab {
+      background: var(--panel);
+      color: var(--muted);
+    }
+
+    .tab:last-child {
+      border-right: 0;
+    }
+
+    .tab.active,
+    .tab:focus {
+      background: var(--gold-soft);
+      color: var(--gold-dark);
+      outline: 2px solid rgba(184, 138, 47, 0.46);
+      outline-offset: -2px;
+    }
+
+    .main {
+      padding: 24px 0 38px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 28px;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 23px;
+    }
+
+    h3 {
+      font-size: 17px;
+    }
+
+    .muted {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+
+    .section {
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid #ebe5d9;
+    }
+
+    .section:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .grid-2 {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      margin-left: -6px;
+      margin-right: -6px;
+    }
+
+    .cell {
+      display: table-cell;
+      width: 50%;
+      padding: 0 6px 12px;
+      vertical-align: top;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 7px;
+      color: #3d4652;
+      font-size: 13.5px;
+      font-weight: 800;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    input[type="password"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #d1c9ba;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 12px;
+      outline: none;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+    }
+
+    body.dark input[type="text"],
+    body.dark input[type="url"],
+    body.dark input[type="number"],
+    body.dark input[type="password"],
+    body.dark input[type="file"],
+    body.dark select,
+    body.dark textarea {
+      background: #111827;
+      color: var(--ink);
+      border-color: #4a4032;
+    }
+
+    textarea {
+      min-height: 182px;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(184, 138, 47, 0.16);
+    }
+
+    .choice-box {
+      padding: 12px;
+      border: 1px solid #e3dccc;
+      border-radius: 8px;
+      background: var(--panel-soft);
+    }
+
+    .radio-row,
+    .check-row {
+      display: block;
+      margin: 0 0 9px;
+      color: var(--ink);
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .radio-row:last-child,
+    .check-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .radio-row input,
+    .check-row input {
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: block;
+    }
+
+    .button {
+      display: inline-block;
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 10px 16px;
+      background: #f0ede6;
+      color: #0f172a;
+      cursor: pointer;
+      font-weight: 800;
+      text-align: center;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+
+    body.dark .button {
+      background: #263241;
+      color: var(--ink);
+    }
+
+    body.dark .button:hover,
+    body.dark .button:focus {
+      background: #303d4d;
+    }
+
+    .actions .button {
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .button:hover,
+    .button:focus {
+      background: #e6dfd2;
+      outline: none;
+    }
+
+    .button-primary {
+      background: linear-gradient(145deg, var(--gold), var(--gold-dark));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(140, 104, 31, 0.2);
+    }
+
+    body.dark .button-primary {
+      color: #111827;
+    }
+
+    .button-primary:hover,
+    .button-primary:focus {
+      background: var(--gold-dark);
+    }
+
+    .button:disabled {
+      opacity: 0.64;
+      cursor: wait;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border: 1px solid #f2c879;
+      border-radius: 8px;
+      background: #fff8e5;
+      color: #78350f;
+      font-size: 14px;
+    }
+
+    .list {
+      margin: 12px 0 0;
+      padding-left: 19px;
+      color: #536579;
+      font-size: 14px;
+    }
+
+    .list li {
+      margin-bottom: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .footer {
+      padding: 18px 0 24px;
+      background: transparent;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.74);
+      text-align: center;
+    }
+
+    .modal-backdrop:before {
+      content: "";
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+    }
+
+    .modal {
+      display: inline-block;
+      width: 430px;
+      max-width: 100%;
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff;
+      text-align: left;
+      vertical-align: middle;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h2 {
+      color: var(--red);
+    }
+
+    .modal p {
+      color: var(--muted);
+    }
+
+    .toast-container {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      z-index: 9999;
+      width: 360px;
+      max-width: calc(100% - 24px);
+      margin-left: -180px;
+      pointer-events: none;
+    }
+
+    .toast {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #111827;
+      color: #fff;
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+    }
+
+    .toast.success {
+      background: #047857;
+    }
+
+    .toast.error {
+      background: #b91c1c;
+    }
+
+    .toast button {
+      float: right;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    @media (max-width: 840px) {
+      .topbar-inner,
+      .hero-grid,
+      .grid-2,
+      .brand-cell,
+      .lang-cell,
+      .hero-copy,
+      .cell {
+        display: block;
+        width: 100%;
+      }
+
+      .lang-cell {
+        margin-top: 12px;
+        text-align: left;
+      }
+
+      .hero-copy {
+        padding-right: 0;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .tabs {
+        display: block;
+      }
+
+      .tab {
+        display: block;
+        width: 100%;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      .cell {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .wrap {
+        max-width: calc(100% - 16px);
+      }
+
+      .hero {
+        padding-top: 24px;
+      }
+
+      h1 {
+        font-size: 29px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .button {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .language-select,
+      .theme-button {
+        width: 100%;
+        margin: 0 0 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand-cell">
+        <img class="brand-logo" src="favicon.svg" alt="" />
+        <span class="brand-name" data-i18n="brand">Kayato MobileConfig Studio</span>
+      </div>
+      <div class="lang-cell">
+        <label for="languageSelect" class="hidden">Language</label>
+        <select id="languageSelect" class="language-select" aria-label="Language">
+          <option value="en">English</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+        <button id="themeToggle" class="theme-button" type="button" aria-label="Toggle theme">☾</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 data-i18n="heroTitle">Create, sign and inspect iOS configuration profiles.</h1>
+        <p class="lead" data-i18n="heroLead">
+          A local-first studio for .mobileconfig files. Generate common payloads, sign CMS/PKCS#7 profiles, extract signed content and prepare files for Safari installation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs-shell">
+    <div class="wrap tabs" aria-label="Tools">
+      <button class="tab active" type="button" data-panel="installPanel" data-i18n="tabInstall">Install</button>
+      <button class="tab" type="button" data-panel="generatePanel" data-i18n="tabGenerate">Generate</button>
+      <button class="tab" type="button" data-panel="signPanel" data-i18n="tabSign">Sign</button>
+      <button class="tab" type="button" data-panel="unsignPanel" data-i18n="tabUnsign">Unsign</button>
+    </div>
+  </nav>
+
+  <main class="wrap main">
+      <section>
+        <div id="installPanel" class="panel app-panel">
+          <h2 data-i18n="installTitle">Prepare an installable profile</h2>
+          <p class="muted" data-i18n="installLead">Use a local file, a direct HTTPS URL or pasted XML/Plist content.</p>
+
+          <div class="section">
+            <div class="choice-box">
+              <label class="radio-row"><input type="radio" name="installSource" value="file" checked /> <span data-i18n="sourceFile">Local file</span></label>
+              <label class="radio-row"><input type="radio" name="installSource" value="url" /> <span data-i18n="sourceUrl">Direct URL</span></label>
+              <label class="radio-row"><input type="radio" name="installSource" value="xml" /> <span data-i18n="sourceXml">XML/Plist</span></label>
+            </div>
+          </div>
+
+          <div id="installFileFields" class="section">
+            <label for="localFile" data-i18n="localFileLabel">Profile file</label>
+            <input type="file" id="localFile" accept=".mobileconfig,.xml,text/xml,application/xml" />
+          </div>
+
+          <div id="installUrlFields" class="section hidden">
+            <label for="fileUrl" data-i18n="urlLabel">Profile URL</label>
+            <input type="url" id="fileUrl" data-i18n-placeholder="urlPlaceholder" placeholder="https://example.com/profile.mobileconfig" />
+          </div>
+
+          <div id="installXmlFields" class="section hidden">
+            <label for="xmlCode" data-i18n="xmlLabel">XML/Plist content</label>
+            <textarea id="xmlCode" rows="8" placeholder="<?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>"></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="processInstall" class="button button-primary" type="button" data-i18n="installButton">Create install file</button>
+            <button id="trySampleUrl" class="button" type="button" data-i18n="sampleUrlButton">Use sample URL</button>
+            <button id="trySampleCode" class="button" type="button" data-i18n="sampleXmlButton">Insert sample XML</button>
+          </div>
+        </div>
+
+        <div id="generatePanel" class="panel app-panel hidden">
+          <h2 data-i18n="generateTitle">Generate a profile</h2>
+          <p class="muted" data-i18n="generateLead">Build common mobileconfig payloads without any external repository files.</p>
+
+          <div class="section">
+            <label for="profileType" data-i18n="payloadTypeLabel">Payload type</label>
+            <select id="profileType">
+              <option value="wifi">Wi-Fi</option>
+              <option value="mail">Mail IMAP/SMTP</option>
+              <option value="carddav">CardDAV</option>
+              <option value="caldav">CalDAV</option>
+            </select>
+          </div>
+
+          <div class="section">
+            <div class="grid-2">
+              <div class="cell">
+                <label for="profileName" data-i18n="profileNameLabel">Profile name</label>
+                <input id="profileName" type="text" value="Kayato Profile" />
+              </div>
+              <div class="cell">
+                <label for="profileIdentifier">PayloadIdentifier</label>
+                <input id="profileIdentifier" type="text" value="com.kayato.profile" />
+              </div>
+            </div>
+            <label for="profileDescription" data-i18n="descriptionLabel">Description</label>
+            <input id="profileDescription" type="text" value="Generated by Kayato MobileConfig Studio" />
+          </div>
+
+          <div id="wifiFields" class="section profile-fields">
+            <div class="grid-2">
+              <div class="cell">
+                <label for="wifiSsid">Wi-Fi SSID</label>
+                <input id="wifiSsid" type="text" data-i18n-placeholder="wifiSsidPlaceholder" placeholder="Network name" />
+              </div>
+              <div class="cell">
+                <label for="wifiEncryption" data-i18n="securityLabel">Security</label>
+                <select id="wifiEncryption">
+                  <option value="WPA">WPA/WPA2/WPA3</option>
+                  <option value="WEP">WEP</option>
+                  <option value="None" data-i18n="noPasswordOption">No password</option>
+                </select>
+              </div>
+            </div>
+            <label for="wifiPassword" data-i18n="wifiPasswordLabel">Wi-Fi password</label>
+            <input id="wifiPassword" type="password" data-i18n-placeholder="optionalPassword" placeholder="Leave blank if there is no password" />
+          </div>
+
+          <div id="mailFields" class="section profile-fields hidden">
+            <div class="grid-2">
+              <div class="cell">
+                <label for="mailAddress">Email</label>
+                <input id="mailAddress" type="text" placeholder="user@example.com" />
+              </div>
+              <div class="cell">
+                <label for="mailName" data-i18n="accountNameLabel">Account name</label>
+                <input id="mailName" type="text" placeholder="Kayato Mail" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="cell">
+                <label for="imapHost">IMAP host</label>
+                <input id="imapHost" type="text" placeholder="imap.example.com" />
+              </div>
+              <div class="cell">
+                <label for="imapPort">IMAP port</label>
+                <input id="imapPort" type="number" value="993" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="cell">
+                <label for="smtpHost">SMTP host</label>
+                <input id="smtpHost" type="text" placeholder="smtp.example.com" />
+              </div>
+              <div class="cell">
+                <label for="smtpPort">SMTP port</label>
+                <input id="smtpPort" type="number" value="587" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="cell">
+                <label for="mailUser">Username</label>
+                <input id="mailUser" type="text" placeholder="user@example.com" />
+              </div>
+              <div class="cell">
+                <label for="mailPassword">Password</label>
+                <input id="mailPassword" type="password" />
+              </div>
+            </div>
+          </div>
+
+          <div id="davFields" class="section profile-fields hidden">
+            <div class="grid-2">
+              <div class="cell">
+                <label for="davHost">DAV host</label>
+                <input id="davHost" type="text" placeholder="dav.example.com" />
+              </div>
+              <div class="cell">
+                <label for="davPort">Port</label>
+                <input id="davPort" type="number" value="443" />
+              </div>
+            </div>
+            <label for="davPrincipal">Principal URL</label>
+            <input id="davPrincipal" type="text" placeholder="/principals/users/name/" />
+            <div class="grid-2">
+              <div class="cell">
+                <label for="davUser">Username</label>
+                <input id="davUser" type="text" />
+              </div>
+              <div class="cell">
+                <label for="davPassword">Password</label>
+                <input id="davPassword" type="password" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <label class="check-row"><input id="signGenerated" type="checkbox" checked /> <span data-i18n="signGeneratedLabel">Automatically sign with Kayato after generating</span></label>
+          </div>
+
+          <div class="actions">
+            <button id="generateProfile" class="button button-primary" type="button" data-i18n="generateButton">Generate profile</button>
+          </div>
+        </div>
+
+        <div id="signPanel" class="panel app-panel hidden">
+          <h2 data-i18n="signTitle">Sign a .mobileconfig profile</h2>
+          <p class="muted" data-i18n="signLead">Default mode only needs a profile file. The automatic signer appears as Kayato.</p>
+
+          <div class="section">
+            <label for="unsignedProfile" data-i18n="unsignedProfileLabel">Unsigned profile</label>
+            <input type="file" id="unsignedProfile" accept=".mobileconfig,.xml,text/xml,application/xml" />
+          </div>
+
+          <div class="section">
+            <div class="choice-box">
+              <label class="radio-row"><input type="radio" name="signMode" value="auto" checked /> <span data-i18n="signAuto">Sign with Kayato self-signed identity</span></label>
+              <label class="radio-row"><input type="radio" name="signMode" value="p12" /> <span data-i18n="signP12">Use P12/PFX</span></label>
+              <label class="radio-row"><input type="radio" name="signMode" value="pem" /> <span data-i18n="signPem">Use certificate PEM + private key PEM</span></label>
+            </div>
+          </div>
+
+          <div id="autoFields" class="section">
+            <div class="note" data-i18n="autoNote">Kayato mode needs no extra key or certificate. iOS may show Not Verified because the certificate is self-signed.</div>
+          </div>
+
+          <div id="p12Fields" class="section hidden">
+            <label for="p12File" data-i18n="p12FileLabel">P12 or PFX file</label>
+            <input type="file" id="p12File" accept=".p12,.pfx,application/x-pkcs12" />
+            <label for="p12Password" style="margin-top:12px" data-i18n="p12PasswordLabel">Password</label>
+            <input type="password" id="p12Password" data-i18n-placeholder="optionalPassword" placeholder="Leave blank if there is no password" />
+          </div>
+
+          <div id="pemFields" class="section hidden">
+            <label for="certPem">Certificate PEM</label>
+            <textarea id="certPem" rows="6" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+            <label for="keyPem" style="margin-top:12px">Private key PEM</label>
+            <textarea id="keyPem" rows="6" placeholder="-----BEGIN PRIVATE KEY-----"></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="signProfile" class="button button-primary" type="button" data-i18n="signButton">Sign and download profile</button>
+          </div>
+        </div>
+
+        <div id="unsignPanel" class="panel app-panel hidden">
+          <h2 data-i18n="unsignTitle">Unsign a signed profile</h2>
+          <p class="muted" data-i18n="unsignLead">Extract XML content from a CMS/PKCS#7 signed mobileconfig file so it can be inspected, edited or signed again.</p>
+
+          <div class="section">
+            <label for="signedProfile" data-i18n="signedProfileLabel">Signed profile</label>
+            <input type="file" id="signedProfile" accept=".mobileconfig,application/x-apple-aspen-config" />
+          </div>
+
+          <div class="actions">
+            <button id="unsignProfile" class="button button-primary" type="button" data-i18n="unsignButton">Unsign and download XML</button>
+          </div>
+        </div>
+      </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap" data-i18n="footer">Kayato MobileConfig Studio runs as a static local-first web app.</div>
+  </footer>
+
+  <div id="browserModal" class="modal-backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="browserModalTitle">
+      <h2 id="browserModalTitle" data-i18n="modalTitle">Safari recommended</h2>
+      <p data-i18n="modalCopy">iOS requires Safari to open the configuration profile installation screen. Open this page in Safari on iPhone or iPad.</p>
+      <button id="hideModal" class="button button-primary" type="button" data-i18n="modalButton">Got it</button>
+    </div>
+  </div>
+
+  <script defer src="forge.min.js"></script>
+  <script defer src="mobile-config-installer.bundle.js"></script>
+</body>
+</html>
+
